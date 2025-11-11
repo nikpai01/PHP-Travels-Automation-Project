@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK24'           // Make sure JDK24 is configured in Jenkins
+        maven 'Maven3'        // Make sure Maven is configured in Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('Publish Reports') {
+            steps {
+                publishHTML(target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'target',
+                    reportFiles: 'cucumber-report.html',
+                    reportName: 'Cucumber HTML Report'
+                ])
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'target/*.json', fingerprint: true
+        }
+    }
+}
